@@ -1,0 +1,2 @@
+# icinga
+setup icinga
