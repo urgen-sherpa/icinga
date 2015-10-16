@@ -1,0 +1,151 @@
+1.      Installation ICINGA2 Monitor server
+2.1 Requirement 
+# rpm --import http://packages.icinga.org/icinga.key
+#  wget http://packages.icinga.org/epel/ICINGA-release.repo -O /etc/yum.repos.d/ICINGA-release.repo
+# yum makecache
+2.2 Installation  Icinga2
+# yum install icinga2
+2.3 Setup MySQL database
+# yum install mysql-server mysql
+# chkconfig mysqld on
+# service mysqld start
+2.4 Setup IDO modul forMySQL
+# yum install icinga2-ido-mysql
+2.5 Configure MySQL for icinga2
+- Import schema icinga2
+# mysql -u root –p
+mysql>  CREATE DATABASE icinga;
+        GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga.* TO 'icinga'@'localhost' IDENTIFIED BY 'icinga';
+# mysql -u root -p icinga < /usr/share/icinga2-ido-mysql/schema/mysql.sql
+2.6 Enabling the IDO MySQL module
+# icinga2 feature enable ido-mysql
+Module 'ido-mysql' was enabled.
+Make sure to restart Icinga 2 for these changes to take effect.
+# service icinga2 restart
+2.7 Installation icinga-web:
+# yum install icinga-web icinga-web-mysql
+# service httpd restart
+# service icinga2 restart
+-          Set permission /var/log/icinga-web for apache
+-          Disable Selinux : edit “/etc/sysconfig/selinux”
+SELINUX=disabled
+# init 6
+2.8 Setting Up External Command Pipe
+# icinga2 feature enable command
+# service icinga2 restart
+edit /etc/icinga-web/conf.d/access.xml
+<resource name="icinga_pipe">/var/run/icinga2/cmd/icinga2.cmd</resource>
+# icinga-web-clearcache
+  2.9 Webserver – php
+# yum install httpd
+# chkconfig httpd on
+# service httpd start
+# yum install php php-cli php-pear php-xmlrpc php-xsl php-pdo php-soap php-gd php-ldap php-mysql
+2.10 Firewall Rules
+# iptables -A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT
+# service iptables save
+2.11 Configure MySQL cho icinga-web
+- Import schema icinga2
+# mysql -u root –p
+mysql>  CREATE DATABASE icinga_web;
+        GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON icinga_web.* TO 'icinga_web'@'localhost' IDENTIFIED BY 'icinga_web';
+# mysql -u root -p icinga_web < /usr/share/doc/icinga-web-1.11.2/schema/mysql.sql             #import database icinga_web
+Note :
+Edit time zone:
+#vi /etc/php.ini
+Date.timezone = Asia/Ho_Chi_Minh
+2.12 Login icigna-web:
+http://x.x.x.x/icinga-web
+user: root
+pass: password
+2.13 Enabled Features during Installation
+The default installation will enable three features required for a basic Icinga 2 installation:
+checker for executing checks
+notification for sending notifications
+mainlog for writing the icinga2.log file
+You can verify that by calling icinga2 feature list CLI command to see which features are enabled and disabled.
+# icinga2 feature list
+Disabled features: api command compatlog debuglog graphite icingastatus ido-mysql ido-pgsql livestatus notification perfdata statusdata syslog
+Enabled features: checker mainlog notification
+2.14 Installation Paths
+Đường dẫn mặc định khi cài đặt icinga2 của các file và thư mục:
+Path
+Description
+/etc/icinga2
+Contains Icinga 2 configuration files.
+/etc/init.d/icinga2
+The Icinga 2 init script.
+/usr/sbin/icinga2*
+The Icinga 2 binary.
+/usr/share/doc/icinga2
+Documentation files that come with Icinga 2.
+/usr/share/icinga2/include
+The Icinga Template Library and plugin command configuration.
+/var/run/icinga2
+PID file.
+/var/run/icinga2/cmd
+Command pipe and Livestatus socket.
+/var/cache/icinga2
+status.dat/objects.cache, icinga2.debug files
+/var/spool/icinga2
+Used for performance data spool files.
+/var/lib/icinga2
+Icinga 2 state file, cluster log, local CA and configuration files.
+/var/log/icinga2
+Log file location and compat/ directory for the CompatLogger feature.
+2.15 Email icinga@icinga.local.domain
+Edit hostname
+#vi /etc/hosts
+10.20.14.110  icinga   icinga.local.domain
+#vi /etc/sysconfig/network
+HOSTNAME=icinga.local.domain
+#vi /etc/passwd
+root:x:0:0:icinga:/root:/bin/bash
+add email
+#vi /etc/icinga2/conf.d/users.conf
+object User "han6monitor"{
+  import "generic-user"
+ 
+  display_name = " Monitor - "
+  groups = [ "icingaadmins" ]
+ 
+  email = "xxxx@gmail.com"
+}
+2.      Installation agent và plugins on Client
+## RHEL/CentOS 6 64-Bit ##
+# wget http://download.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+# rpm -ivh epel-release-6-8.noarch.rpm
+# yum install nagios-plugins-all sysstat bc xinetd nagios-nrpe –y
+# ls /usr/lib64/nagios/plugins/
+-          edit /etc/xinetd.d/nrpe:
+disable = no
+only_from = 10.20.14.110 # IP address Icinga Server
+# service xinetd restart
+-          edit /etc/nagios/nrpe.cfg
+Disable Selinux : edit “/etc/sysconfig/selinux”
+SELINUX=disabled
+echo 0 > /selinux/enforce
+3.      Cài đặt P4PNagios plugins cho icinga-web
+yum install pnp4nagios icinga-web-module-pnp –y
+ 
+# ls /var/spool/icinga2/perfdata/
+# icinga2 feature enable perfdata
+# service icinga2 restart
+# ls /var/spool/icinga2/perfdata/
+# service httpd restart
+# vi /etc/pnp4nagios/npcd.cfg
+user = icinga
+group = icinga
+…..
+perfdata_spool_dir = /var/spool/icinga2/perfdata/
+# service npcd start
+# chkconfig npcd on
+# service httpd restart
+# vi /etc/nagios/passwd
+icingaadmin:$apr1$ipM6pQLU$mXHz4PJc9.pbhWK.Hntts1 (pass: admin)
+(http://www.htaccesstools.com/htpasswd-generator/)
+htpasswd /etc/nagios/passwd icingaadmin
+ 
+# chown -R icinga.icinga /var/lib/pnp4nagios/
+# service httpd restart
+# service icinga2 restart
