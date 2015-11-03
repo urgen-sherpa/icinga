@@ -1,0 +1,43 @@
+/etc/icinga2/conf.d/commands.conf   <add on top or bottom of the file>
+
+/* Command objects */
+
+object CheckCommand "monitmysql" {
+    import "plugin-check-command"
+    command = [ PluginDir + "/check_mysql"  ]
+    arguments = {
+    "-H" = "$mysql_address$"
+    "-d" = "$mysql_database$"
+    "-u" = "$mysql_user$"
+    "-p" = "$mysql_pass$"
+    }
+    vars.mysql_address = "$address$"
+    vars.mysql_database = "salesdb"
+    vars.mysql_user = "root"
+    vars.mysql_pass = "redhat123"
+   
+}
+
+              ######################################
+
+vim /etc/icinga2/conf.d/hosts.conf
+
+object Host "dbserver11" {
+    address = "127.0.0.1"
+    vars.os = "Linux"
+    check_command = "monitmysql"
+}
+
+             ######################################
+vim /etc/icinga2/conf.d/services.conf
+
+apply Service "mysql" {
+   import "generic-service"
+   check_command = "mysql"
+   assign where host.name == "dbserver11"
+}
+
+
+
+
+
