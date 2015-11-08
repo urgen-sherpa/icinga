@@ -1,0 +1,63 @@
+reference:- 
+================
+http://zyradyl.github.io/2015/08/16/Icinga2-Tutorial-Part-2/
+https://github.com/Icinga/icinga2/blob/master/itl/command-plugins.conf
+https://www.reddit.com/r/icinga/comments/3rc6a1/monitoring_local_mysql_server_with_icinga2/
+http://docs.icinga.org/icinga2/latest/doc/module/icinga2/chapter/monitoring-basics
+http://www.legendiary.at/2015/01/10/monitoring-vhosts-with-icinga-2-and-icinga-web-2/
+
+vim /etc/icinga2/conf.d/hosts.conf
+object Host "www.google.com" {
+    address = "74.125.136.84"
+    check_command = "http"
+    vars.http_vhost = "mail.google.com"
+    vars.http_ssl = "1"
+}
+
+object Host "dbserver11" {
+    import "generic-host"
+    address = "127.0.0.1"
+    vars.os = "Linux"
+    check_command = "mysql"
+    vars.mysql_database = "salesdb"
+    vars.mysql_username = "root"
+    vars.mysql_password = "redhat"
+}
+
+/********************** commands.conf ************************/
+object CheckCommand "mysql" {
+        import "plugin-check-command"
+        import "ipv4-or-ipv6"
+
+        command = [ PluginDir + "/check_mysql" ]
+
+        arguments = {
+                "-H" = "$mysql_hostname$"
+                "-P" = "$mysql_port$"
+                "-n" = {
+                        set_if = "$mysql_ignore_auth$"
+                }
+                "-s" = "$mysql_socket$"
+                "-d" = "$mysql_database$"
+                "-f" = "$mysql_file$"
+                "-g" = "$mysql_group$"
+                "-u" = "$mysql_username$"
+                "-p" = "$mysql_password$"
+                "-S" = {
+                        set_if = "$mysql_check_slave$"
+                }
+                "-w" = "$mysql_warning$"
+                "-c" = "$mysql_critical$"
+                "-l" = {
+                        set_if = "$mysql_ssl$"
+                }
+                "-C" = "$mysql_cacert$"
+                "-a" = "$mysql_cert$"
+                "-k" = "$mysql_key$"
+                "-D" = "$mysql_cadir$"
+                "-L" = "$mysql_ciphers$"
+        }
+
+        vars.mysql_hostname = "$check_address$"
+}
+/***************************/
