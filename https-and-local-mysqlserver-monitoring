@@ -5,6 +5,7 @@ https://github.com/Icinga/icinga2/blob/master/itl/command-plugins.conf
 https://www.reddit.com/r/icinga/comments/3rc6a1/monitoring_local_mysql_server_with_icinga2/
 http://docs.icinga.org/icinga2/latest/doc/module/icinga2/chapter/monitoring-basics
 http://www.legendiary.at/2015/01/10/monitoring-vhosts-with-icinga-2-and-icinga-web-2/
+http://atticmuse.blogspot.com/2015/05/icinga2-disable-ping-check-for-hosts.html
 
 ###########  syntax highliting for icinga commands ####################
 captor conf.d # mkdir -p ~/.vim/{syntax,ftdetect}
@@ -15,6 +16,12 @@ captor syntax # cp vim/syntax/icinga2.vim ~/.vim/syntax/
 captor syntax # cp vim/ftdetect/icinga2.vim ~/.vim/ftdetect/
 
 ##############################
+vim /etc/icinga2/conf.d/groups.conf
+object HostGroup "DBservers" {
+    display_name = "DatabaseServers"
+    assign where host.vars.proddb == "yes"
+}
+
 
 vim /etc/icinga2/conf.d/hosts.conf
 object Host "www.google.com" {
@@ -28,6 +35,7 @@ object Host "dbserver11" {
     import "generic-host"
     address = "127.0.0.1"
     vars.os = "Linux"
+    vars.proddb = "yes"
     check_command = "mysql"
     vars.mysql_database = "salesdb"
     vars.mysql_username = "root"
