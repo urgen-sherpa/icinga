@@ -6,6 +6,16 @@ https://www.reddit.com/r/icinga/comments/3rc6a1/monitoring_local_mysql_server_wi
 http://docs.icinga.org/icinga2/latest/doc/module/icinga2/chapter/monitoring-basics
 http://www.legendiary.at/2015/01/10/monitoring-vhosts-with-icinga-2-and-icinga-web-2/
 
+###########  syntax highliting for icinga commands ####################
+captor conf.d # mkdir -p ~/.vim/{syntax,ftdetect}
+captor conf.d # cd /usr/share/icinga
+icinga2/           icinga2-common/    icinga2-ido-pgsql/ icingaweb2/
+captor conf.d # cd /usr/share/icinga2-common/syntax/
+captor syntax # cp vim/syntax/icinga2.vim ~/.vim/syntax/
+captor syntax # cp vim/ftdetect/icinga2.vim ~/.vim/ftdetect/
+
+##############################
+
 vim /etc/icinga2/conf.d/hosts.conf
 object Host "www.google.com" {
     address = "74.125.136.84"
